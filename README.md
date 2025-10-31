@@ -216,3 +216,144 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
 		</li>
 	</ol>
 </blockquote>
+
+
+### • Soal 11
+
+<blockquote>
+	<ol start="11">
+		<li>
+			<p align="justify">
+				Musuh mencoba menguji kekuatan pertahanan Númenor. Dari node client, luncurkan serangan benchmark (ab) ke elros.<xxxx>.com/api/airing/:<br>
+- Serangan Awal: -n 100 -c 10 (100 permintaan, 10 bersamaan).<br>
+- Serangan Penuh: -n 2000 -c 100 (2000 permintaan, 100 bersamaan). Pantau kondisi para worker dan periksa log Elros untuk melihat apakah ada worker yang kewalahan atau koneksi yang gagal.<br>
+- Strategi Bertahan: Tambahkan weight dalam algoritma, kemudian catat apakah lebih baik atau tidak.
+		</li>
+	</ol>
+</blockquote>
+
+
+
+### • Soal 12
+
+<blockquote>
+	<ol start="12">
+		<li>
+			<p align="justify">
+				Para Penguasa Peri (Galadriel, Celeborn, Oropher) membangun taman digital mereka menggunakan PHP. Instal nginx dan php8.4-fpm di setiap node worker PHP. Buat file index.php sederhana di /var/www/html masing-masing yang menampilkan nama hostname mereka. Buat agar akses web hanya bisa melalui domain nama, tidak bisa melalui ip.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+### • Soal 13
+
+<blockquote>
+	<ol start="13">
+		<li>
+			<p align="justify">
+				Setiap taman Peri harus dapat diakses. Konfigurasikan nginx di setiap worker PHP untuk meneruskan permintaan file .php ke socket php-fpm yang sesuai. Atur agar Galadriel mendengarkan di port 8004, Celeborn di 8005, dan Oropher di 8006.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+### • Soal 14
+
+<blockquote>
+	<ol start="14">
+		<li>
+			<p align="justify">
+				Keamanan adalah prioritas. Terapkan Basic HTTP Authentication pada nginx di setiap worker PHP, sehingga hanya mereka yang tahu kata sandi (user: noldor, pass: silvan) yang bisa masuk.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+
+### • Soal 15
+
+<blockquote>
+	<ol start="15">
+		<li>
+			<p align="justify">
+				Para Peri ingin tahu siapa yang mengunjungi taman mereka. Modifikasi konfigurasi Nginx di worker PHP untuk menambahkan header X-Real-IP yang akan diteruskan ke PHP. Ubah file index.php untuk menampilkan alamat IP pengunjung asli saat ini.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+
+### • Soal 16
+
+<blockquote>
+	<ol start="16">
+		<li>
+			<p align="justify">
+				Raja Númenor terakhir yang ambisius, Pharazon, mencoba mengawasi taman-taman Peri. Konfigurasikan Nginx di Pharazon sebagai reverse proxy. Buat upstream Kesatria_Lorien berisi alamat ketiga worker PHP. Atur agar permintaan ke pharazon.<xxxx>.com diteruskan ke backend, dan pastikan konfigurasi Nginx di Pharazon juga meneruskan informasi Basic Authentication yang dimasukkan pengguna ke worker.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+
+### • Soal 17
+
+<blockquote>
+	<ol start="17">
+		<li>
+			<p align="justify">
+				Dari node client, lakukan benchmark ke pharazon.<xxxx>.com, jangan lupa menyertakan kredensial autentikasi. Amati distribusi beban ke para worker. Kemudian, simulasikan salah satu taman Peri runtuh (misal: service nginx stop di Galadriel) dan jalankan lagi benchmark. Apakah Pharazon masih bisa mengarahkan pengunjung ke taman yang tersisa? Periksa log Pharazon.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+
+### • Soal 18
+
+<blockquote>
+	<ol start="18">
+		<li>
+			<p align="justify">
+				Kekuatan Palantir sangat vital. Untuk melindunginya, konfigurasikan replikasi database Master-Slave menggunakan MariaDB. Jadikan Palantir sebagai Master. Konfigurasikan Narvi sebagai Slave yang secara otomatis menyalin semua data dari Palantir. Buktikan replikasi berhasil dengan membuat tabel baru di Master dan memeriksanya di Slave.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+
+
+
+### • Soal 19
+
+<blockquote>
+	<ol start="19">
+		<li>
+			<p align="justify">
+				Gelombang serangan dari Mordor semakin intens. Implementasikan rate limiting pada kedua Load Balancer (Elros dan Pharazon) menggunakan Nginx. Batasi agar satu alamat IP hanya bisa melakukan 10 permintaan per detik. Uji coba dengan menjalankan ab dari satu client dengan konkurensi tinggi (-c 50 atau lebih) dan periksa log Nginx untuk melihat pesan request yang ditolak atau ditunda karena rate limit.
+			</p>
+		</li>
+	</ol>
+</blockquote>
+
+
+
+### • Soal 20
+
+<blockquote>
+	<ol start="20">
+		<li>
+			<p align="justify">
+				Beban pada para worker semakin berat. Aktifkan Nginx Caching pada Pharazon untuk menyimpan salinan halaman PHP yang sering diakses. Gunakan curl pada domain nama Pharazon dari client untuk memeriksa response header. Buktikan bahwa permintaan kedua dan seterusnya untuk halaman yang sama mendapatkan status HIT dari cache dan tidak lagi membebani worker PHP.
+			</p>
+		</li>
+	</ol>
+</blockquote>
