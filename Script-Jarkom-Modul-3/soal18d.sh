@@ -1,0 +1,8 @@
+#!/bin/bash
+
+mysql<<EOF
+SHOW DATABASES;
+USE K36DB;
+SHOW TABLES;
+SELECT * FROM users;
+EOF
