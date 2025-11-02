@@ -10,7 +10,7 @@
 ## Asisten Penguji
 | Nama | Kode Asisten |
 |-----------------------|----|
-|  |  |
+| Revalina Fairuzy Azhari Putri | P4 |
 
 ## Pendahuluan
 
