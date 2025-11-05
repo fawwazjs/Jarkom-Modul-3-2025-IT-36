@@ -660,6 +660,240 @@ nslookup google.com
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Sebelum dapat membuat zona DNS pada Erendis, maka langkah pertama adalah menginstall <b>Bind9</b> pada console <b>Erendis</b> terlebih dahulu. Di mana langkah implementasinya adalah:
+</p>
+
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `bind9`.
+
+```bash
+apt-get install bind9 -y
+```
+
+3. Membuat link simbolik `/etc/init.d/bind9` yang merujuk ke `/etc/init.d/named`.
+
+```bash
+ln -s /etc/init.d/named /etc/init.d/bind9
+```
+
+<p align="justify">
+&emsp; Kemudian setelah menginstall bind9, kita perlu melakukan konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
+</p>
+
+4. Membuat file konfigurasi `/etc/bind/named.conf.local` dan menetapkan zona DNS `K36.com` dengan tipe `master` untuk Erendis.
+
+```bash
+cat > /etc/bind/named.conf.local <<'EOF'
+zone "K36.com" {
+        type master;
+        file "/etc/bind/ns1/K36.com";
+        allow-transfer { 192.229.3.102; };
+        also-notify { 192.229.3.102; };
+        notify yes;
+};
+EOF
+```
+
+5. Membuat direktori `/etc/bind/ns1`.
+
+```bash
+mkdir -p /etc/bind/ns1
+```
+
+6. Mengalihkan kepemilikan direktori `/etc/bind/ns1` ke user `bind`.
+```bash
+chown bind:bind /etc/bind/ns1
+```
+
+<p align="justify">
+Langkah selanjutnya adalah membuat file zona DNS otoritatif pada Erendis, di mana ketentuannya:
+	<ul>
+		<li>
+			Start of Authority (SOA) yang merujuk ke nama domain <code>ns1.K36.com</code>.
+		</li>
+		<li>
+			Nameserver Record (NS) untuk nama domain <code>ns1.K36.com</code> dan <code>ns2.K36.com</code>.
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Erendis</b> yang merujuk ke nama domain <code>ns1.K36.com</code>. 
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Amdir</b> yang merujuk ke nama domain <code>ns2.K36.com</code>. 
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Erendis</b> yang merujuk ke nama domain apex (@) <code>K36.com</code>. 
+		</li>
+		<li>
+			Address Record (A) untuk IP address dari node <b>Elendil</b>, <b>Isildur</b>, <b>Anarion</b>, <b>Elros</b>, <b>Galadriel</b>, <b>Celeborn</b>, <b>Oropher</b>, <b>Pharazon</b>, dan <b>Palantir</b>. 
+		</li>
+	</ul>
+Dengan langkah implementasinya:
+</p>
+
+7. Membuat file record zona DNS template pada `/etc/bind/zone.template`.
+
+```bash
+cat > /etc/bind/zone.template <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     localhost. root.localhost. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      localhost.
+@       IN      A       127.0.0.1
+EOF
+```
+
+8. Menyalin file template ke direktori `/etc/bind/ns1` dengan nama `K36.com`.
+
+```bash
+cp /etc/bind/zone.template /etc/bind/ns1/K36.com
+```
+
+9. Mengubah isi file template dan menyesuaikannya dengan ketentuan soal.
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1         IN      A       192.229.3.101  ; IP Erendis
+ns2         IN      A       192.229.3.102  ; IP Amdir
+@           IN      A       192.229.3.101  ; IP Erendis
+
+elendil     IN      A       192.229.1.101  ; IP Elendil
+isildur     IN      A       192.229.1.102  ; IP Isildur
+anarion     IN      A       192.229.1.103  ; IP Anarion
+elros       IN      A       192.229.1.105  ; IP Elros
+galadriel   IN      A       192.229.2.101  ; IP Galadriel
+celeborn    IN      A       192.229.2.102  ; IP Celeborn
+oropher     IN      A       192.229.2.103  ; IP Oropher
+pharazon    IN      A       192.229.2.105  ; IP Pharazon
+palantir    IN      A       192.229.4.102  ; IP Palantir
+EOF
+```
+
+10. Mendelegasikan wewenang atas sebuah subdomain pada file `/etc/bind/named.conf.options`.
+
+```bash
+cat > /etc/bind/named.conf.options <<'EOF'
+options {
+    directory "/var/cache/bind";
+
+    forwarders { };
+  
+    dnssec-validation no;
+    listen-on-v6 { any; };
+    allow-query { any; };
+    auth-nxdomain no;
+};                   
+EOF         
+```
+
+11. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Selepas itu, kita juga perlu melakukan konfigurasi pada node Amdir. Di mana langkah pertama yang perlu dilakukan adalah menginstall <b>Bind9</b> pada console <b>Amdir</b> terlebih dahulu. Dengan langkah implementasinya adalah:
+</p>
+
+14. Memperbaharui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+15. Menginstall `bind9`.
+
+```bash
+apt-get install bind9 -y
+```
+
+16. Membuat link simbolik `/etc/init.d/bind9` yang merujuk ke `/etc/init.d/named`.
+
+```bash
+ln -s /etc/init.d/named /etc/init.d/bind9
+```
+
+<p align="justify">
+&emsp; Kemudian setelah menginstall bind9, kita perlu melakukan konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
+</p>
+
+17. Membuat file konfigurasi `/etc/bind/named.conf.local` dan menetapkan zona DNS `K36.com` dengan tipe `slave` untuk Amdir.
+
+```bash
+cat > /etc/bind/named.conf.local <<'EOF'
+zone "K36.com" {
+        type slave;
+        masters { 192.229.3.101; };
+        file "/etc/bind/ns1/K36.com";
+};
+EOF
+```
+
+18. Membuat direktori `/etc/bind/ns1`.
+
+```bash
+mkdir -p /etc/bind/ns1
+```
+
+19. Mengalihkan kepemilikan direktori `/etc/bind/ns1` ke user `bind`.
+```bash
+chown bind:bind /etc/bind/ns1
+```
+
+20. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Seterusnya, kita perlu memverifikasi bahwasannya zona <code>K36.com</code> yang ditarik dari Erendis disalin dan dijawab otoritatif oleh Valmar. Di mana kita dapat melakukannya dengan menjalankan:
+</p>
+
+```bash
+dig @192.229.3.101 ns1.K36.com
+dig @192.229.3.102 ns2.K36.com
+```
+
+<p align="justify">
+Menggunakan Gilgalad sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image07.png" alt="ns1" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image08.png" alt="ns2" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya Amdir berhasil menyalin zona <code>K36.com</code> dari Erendis dan memiliki hak otoritatif untuk zona tersebut. Hal ini diindikasikan pada output command <code>dig</code>, khususnya pada bagian <code>flags</code> yang menyatakan flag <code>aa</code> atau Authoritative Answer.
+</p>
 
 ### • Soal 5
 
@@ -667,12 +901,258 @@ nslookup google.com
 	<ol start="5">
 		<li>
 			<p align="justify">
-				Untuk memudahkan, nama alias www.<xxxx>.com dibuat untuk peta utama <xxxx>.com. Reverse PTR juga dibuat agar lokasi Erendis dan Amdir dapat dilacak dari alamat fisik tanahnya. Erendis juga menambahkan pesan rahasia (TXT record) pada petanya: "Cincin Sauron" yang menunjuk ke lokasi Elros, dan "Aliansi Terakhir" yang menunjuk ke lokasi Pharazon. Pastikan Amdir juga mengetahui pesan rahasia ini.
+				Untuk memudahkan, nama alias www.&lt;xxxx&gt;.com dibuat untuk peta utama &lt;xxxx&gt;.com. Reverse PTR juga dibuat agar lokasi Erendis dan Amdir dapat dilacak dari alamat fisik tanahnya. Erendis juga menambahkan pesan rahasia (TXT record) pada petanya: "Cincin Sauron" yang menunjuk ke lokasi Elros, dan "Aliansi Terakhir" yang menunjuk ke lokasi Pharazon. Pastikan Amdir juga mengetahui pesan rahasia ini.
 			</p>
 		</li>
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama adalah menambahkan Canonical Name Record (CNAME) atau suatu alias untuk nama domain <code>www.K36.com</code>. Di mana langkah implementasinya:
+</p>
+
+1. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Canonical Name Record (CNAME) untuk nama domain `www.K36.com`:
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1         IN      A       192.229.3.101  ; IP Erendis
+ns2         IN      A       192.229.3.102  ; IP Amdir
+@           IN      A       192.229.3.101  ; IP Erendis
+
+elendil     IN      A       192.229.1.101  ; IP Elendil
+isildur     IN      A       192.229.1.102  ; IP Isildur
+anarion     IN      A       192.229.1.103  ; IP Anarion
+elros       IN      A       192.229.1.105  ; IP Elros
+galadriel   IN      A       192.229.2.101  ; IP Galadriel
+celeborn    IN      A       192.229.2.102  ; IP Celeborn
+oropher     IN      A       192.229.2.103  ; IP Oropher
+pharazon    IN      A       192.229.2.105  ; IP Pharazon
+palantir    IN      A       192.229.4.102  ; IP Palantir
+
+www         IN      CNAME   K36.com.
+EOF
+```
+
+<p align="justify">
+&emsp; Selain itu, untuk dapat membuat zona Reverse DNS pada Erendis, maka langkah pertama adalah kita perlu memperbarui konfigurasi domain terlebih dahulu pada file <code>/etc/bind/named.conf.local</code>. Di mana langkah implementasinya adalah:
+</p>
+
+2. Menambahkan klausa pada file konfigurasi `/etc/bind/named.conf.local` yang menetapkan zona Reverse DNS `3.229.192.in-addr.arpa` dengan tipe `master` untuk Erendis dan mengaktifkan `notify` dan `allow-transfer` ke node **Amdir**.
+
+```bash
+cat >> /etc/bind/named.conf.local <<'EOF'
+
+zone "3.229.192.in-addr.arpa" {
+        type master;
+        file "/etc/bind/ns1/3.229.192.in-addr.arpa";
+        allow-transfer { 192.229.3.102; };
+        also-notify { 192.229.3.102; };
+        notify yes;
+};
+EOF
+```
+
+<p align="justify">
+Langkah selanjutnya adalah membuat file zona Reverse DNS otoritatif pada Erendis, di mana ketentuannya:
+	<ul>
+		<li>
+			Start of Authority (SOA) yang merujuk ke nama domain <code>ns1.K36.com</code>.
+		</li>
+		<li>
+			Nameserver Record (NS) untuk nama domain <code>ns1.K36.com</code> dan <code>ns2.K36.com</code>.
+		</li>
+		<li>
+			Pointer Record (PTR) untuk nama domain <code>ns1.K36.com</code> yang merujuk ke IP address dari node <b>Erendis</b>. 
+		</li>
+		<li>
+			Pointer Record (PTR) untuk nama domain <code>ns2.K36.com</code> yang merujuk ke IP address dari node <b>Amdir</b>. 
+		</li>
+	</ul>
+Dengan langkah implementasinya:
+</p>
+
+3. Menyalin file template ke direktori `/etc/bind/ns1` dengan nama `3.229.192.in-addr.arpa`.
+
+```bash
+cp /etc/bind/zone.template /etc/bind/ns1/3.229.192.in-addr.arpa
+```
+
+4. Mengubah isi file template dan menyesuaikannya dengan ketentuan soal.
+
+```bash
+cat > /etc/bind/ns1/3.229.192.in-addr.arpa <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100401 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+101     IN      PTR     ns1.K36.com.
+102     IN      PTR     ns2.K36.com.
+EOF
+```
+
+<p align="justify">
+&emsp; Langkah selanjutnya adalah menambahkan Text Record (TXT) yang berisi <code>"Cincin Sauron"</code> untuk nama domain <code>elros.K36.com</code> dan <code>"Aliansi Terakhir"</code> untuk nama domain <code>pharazon.K36.com</code>. Di mana langkah implementasinya adalah:
+</p>
+
+5. Memperbarui file `/etc/bind/ns1/K36.com` dan menambahkan klausa Text Record (TXT) untuk nama domain `elros.K36.com` dan `pharazon.K36.com`.
+
+```bash
+cat > /etc/bind/ns1/K36.com <<'EOF'
+$TTL    604800          ; Waktu cache default (detik)
+@       IN      SOA     ns1.K36.com. root.K36.com. (
+                        2025100402 ; Serial (format YYYYMMDDXX)
+                        604800     ; Refresh (1 minggu)
+                        86400      ; Retry (1 hari)
+                        2419200    ; Expire (4 minggu)
+                        604800 )   ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.K36.com.
+@       IN      NS      ns2.K36.com.
+
+ns1         IN      A       192.229.3.101  ; IP Erendis
+ns2         IN      A       192.229.3.102  ; IP Amdir
+@           IN      A       192.229.3.101  ; IP Erendis
+
+elendil     IN      A       192.229.1.101  ; IP Elendil
+isildur     IN      A       192.229.1.102  ; IP Isildur
+anarion     IN      A       192.229.1.103  ; IP Anarion
+elros       IN      A       192.229.1.105  ; IP Elros
+galadriel   IN      A       192.229.2.101  ; IP Galadriel
+celeborn    IN      A       192.229.2.102  ; IP Celeborn
+oropher     IN      A       192.229.2.103  ; IP Oropher
+pharazon    IN      A       192.229.2.105  ; IP Pharazon
+palantir    IN      A       192.229.4.102  ; IP Palantir
+
+www         IN      CNAME   K36.com.
+
+elros       IN      TXT    "Cincin Sauron"
+pharazon    IN      TXT    "Aliansi Terakhir"
+EOF
+```
+
+6. Memperbarui serial dari SOA file `/etc/bind/ns1/K36.com` dari yang awalnya bernilai `2025100401` menjadi `2025100402`.
+
+7. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Selain itu, kita perlu memverifikasi bahwasannya query Text (TXT) terhadap <code>elros.K36.com</code> dan <code>pharazon.K36.com</code>, serta alias untuk nama domain <code>www.K36.com</code> berhasil ter-resolve ke tujuan yang benar dan konsisten. Di mana hal ini dapat dilakukan dengan menjalankan command <code>dig</code> untuk query Text (TXT) dan command <code>host</code> untuk query Canonical Name Record (CNAME). Menggunakan <b>Gilgalad</b> sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image09.png" alt="wtxt" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Begitu pula, kita perlu memverifikasi dan memastikan bahwasannya Amdir berhasil menyalin pembaruan konfigurasi yang dilakukan pada Erendis. Di mana kita dapat menggunakan command:
+</p>
+
+```bash
+dig @192.229.3.102 K36.com SOA +short
+```
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image10.png" alt="amdr" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya Amdir berhasil pembaruan konfigurasi yang dilakukan pada Erendis, dibuktikan dengan serial dari SOA yang telah diperbarui.
+</p>
+
+<p align="justify">
+&emsp; Selepas itu, kita juga perlu memperbarui konfigurasi Reverse DNS pada node Amdir. Di mana langkah implementasinya adalah:
+</p>
+
+8. Menambahkan klausa pada file konfigurasi `/etc/bind/named.conf.local` yang menetapkan zona Reverse DNS `3.229.192.in-addr.arpa` dengan tipe `slave` untuk Amdir.
+
+```bash
+cat >> /etc/bind/named.conf.local <<'EOF'
+
+zone "3.229.192.in-addr.arpa" {
+        type slave;
+        masters { 192.229.3.101; };
+        file "/etc/bind/ns1/3.229.192.in-addr.arpa";
+};
+EOF
+```
+
+9. Melakukan restart pada service `bind9`.
+
+```bash
+service bind9 restart
+```
+
+<p align="justify">
+&emsp; Setelah itu, kita perlu memastikan bahwasannya zona Reverse DNS pada Erendis dan Amdir dapat berjalan dan dihubungkan ke nama domain yang berkaitan. Di mana kita dapat menggunakan command:
+</p>
+
+```bash
+host 192.229.3.101
+host 192.229.3.102
+```
+
+<p align="justify">
+Menggunakan <b>Gilgalad</b> sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image11.png" alt="rdns" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Juga, kita perlu memperbarui konfigurasi DNS Forwarder pada Minastir untuk menambahkan node DNS Master dan Slave beserta Reverse DNS-nya sebagai server. Di mana langkah implementasinya:  
+</p>
+
+10. Memperbarui file konfigurasi `/etc/dnsmasq.conf` dan menambahkan IP address dari `Erendis` dan `Amdir` beserta Reverse DNS-nya.
+
+```bash
+cat > /etc/dnsmasq.conf << 'EOF'
+no-resolv
+no-poll
+
+interface=eth0
+bind-interfaces
+server=/K36.com/192.229.3.101
+server=/K36.com/192.229.3.102
+server=/3.229.192.in-addr.arpa/192.229.3.101
+server=/3.229.192.in-addr.arpa/192.229.3.102
+server=192.168.122.1
+log-queries
+log-facility=/var/log/dnsmasq.log
+neg-ttl=60
+cache-size=500
+EOF
+```
+
+11. Melakukan restart pada service `dnsmasq`.
+
+```bash
+service dnsmasq restart
+```
 
 ### • Soal 6
 
@@ -680,16 +1160,86 @@ nslookup google.com
 	<ol start="6">
 		<li>
 			<p align="justify">
-				Aldarion menetapkan aturan waktu peminjaman tanah. Ia mengatur:<br>
-- Client Dinamis Keluarga Manusia dapat meminjam tanah selama setengah jam.<br>
-- Client Dinamis Keluarga Peri hanya seperenam jam.<br>
-- Batas waktu maksimal peminjaman untuk semua adalah satu jam.
+				Aldarion menetapkan aturan waktu peminjaman tanah. Ia mengatur:
 			</p>
+			<ul>
+				<li>Client Dinamis Keluarga Manusia dapat meminjam tanah selama setengah jam.</li>
+				<li>Client Dinamis Keluarga Peri hanya seperenam jam.</li>
+				<li>Batas waktu maksimal peminjaman untuk semua adalah satu jam.</li>
+			</ul>
 		</li>
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama adalah memperbarui file konfigurasi DHCP Server dan memperbarui jumlah alokasi lease-time. Di mana langkah implementasinya:
+</p>
 
+1. Memperbarui file konfigurasi `/etc/dhcp/dhcpd.conf` dan memperbarui jumlah alokasi lease-time untuk masing-masing subnet sesuai dengan ketentuan soal.
+
+```bash
+cat > /etc/dhcp/dhcpd.conf << 'EOF'
+max-lease-time 3600;
+authoritative;
+
+subnet 192.229.1.0 netmask 255.255.255.0 {
+    option routers 192.229.1.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.1.255;
+    option domain-name-servers 192.229.5.101;
+    default-lease-time 1800;
+    range 192.229.1.6 192.229.1.34;
+    range 192.229.1.68 192.229.1.94;
+}
+
+subnet 192.229.2.0 netmask 255.255.255.0 {
+    option routers 192.229.2.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.2.255;
+    option domain-name-servers 192.229.5.101;
+    default-lease-time 600;
+    range 192.229.2.35 192.229.2.67;
+    range 192.229.2.96 192.229.2.121;
+}
+
+subnet 192.229.3.0 netmask 255.255.255.0 {
+    option routers 192.229.3.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.3.255;
+    option domain-name-servers 192.229.5.101;
+}
+
+host Khamul {
+    hardware ethernet 02:42:4c:b6:e5:00;
+    fixed-address 192.229.3.95;
+}
+
+subnet 192.229.4.0 netmask 255.255.255.0 {
+    option routers 192.229.4.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.4.255;
+    option domain-name-servers 192.229.5.101;
+}
+EOF
+```
+
+2. Melakukan restart pada service `isc-dhcp-server`.
+
+```bash
+service isc-dhcp-server restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya jumlah alokasi lease-time yang diberikan untuk setiap subnet sudah mengikuti ketentuan yang baru. Di mana hal ini dapat dilakukan dengan menggunakan command <code>dhcp-lease-list --list</code>:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image12.png" alt="leas" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya setiap subnet sudah mengikuti jumlah alokasi lease-time yang sesuai dengan ketentuan soal, dibuktikan dengan perbedaan waktu <code>valid until</code> dari masing-masing subnet.
+</p>
 
 ### • Soal 7
 
