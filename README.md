@@ -1285,7 +1285,7 @@ service isc-dhcp-server restart
 	<ol start="10">
 		<li>
 			<p align="justify">
-				Pemimpin bijak Elros ditugaskan untuk mengkoordinasikan pertahanan Númenor. Konfigurasikan nginx di Elros untuk bertindak sebagai reverse proxy. Buat upstream bernama kesatria_numenor yang berisi alamat ketiga worker (Elendil, Isildur, Anarion). Atur agar semua permintaan yang datang ke domain elros.<xxxx>.com diteruskan secara merata menggunakan algoritma Round Robin ke backend.
+				Pemimpin bijak Elros ditugaskan untuk mengkoordinasikan pertahanan Númenor. Konfigurasikan nginx di Elros untuk bertindak sebagai reverse proxy. Buat upstream bernama kesatria_numenor yang berisi alamat ketiga worker (Elendil, Isildur, Anarion). Atur agar semua permintaan yang datang ke domain elros.&lt;xxxx&gt;.com diteruskan secara merata menggunakan algoritma Round Robin ke backend.
 			</p>
 		</li>
 	</ol>
@@ -1298,10 +1298,13 @@ service isc-dhcp-server restart
 	<ol start="11">
 		<li>
 			<p align="justify">
-				Musuh mencoba menguji kekuatan pertahanan Númenor. Dari node client, luncurkan serangan benchmark (ab) ke elros.<xxxx>.com/api/airing/:<br>
-- Serangan Awal: -n 100 -c 10 (100 permintaan, 10 bersamaan).<br>
-- Serangan Penuh: -n 2000 -c 100 (2000 permintaan, 100 bersamaan). Pantau kondisi para worker dan periksa log Elros untuk melihat apakah ada worker yang kewalahan atau koneksi yang gagal.<br>
-- Strategi Bertahan: Tambahkan weight dalam algoritma, kemudian catat apakah lebih baik atau tidak.
+				Musuh mencoba menguji kekuatan pertahanan Númenor. Dari node client, luncurkan serangan benchmark (ab) ke elros.&lt;xxxx&gt;.com/api/airing/:
+			</p>
+			<ul>
+				<li>Serangan Awal: -n 100 -c 10 (100 permintaan, 10 bersamaan).</li>
+				<li>Serangan Penuh: -n 2000 -c 100 (2000 permintaan, 100 bersamaan). Pantau kondisi para worker dan periksa log Elros untuk melihat apakah ada worker yang kewalahan atau koneksi yang gagal.</li>
+				<li>Strategi Bertahan: Tambahkan weight dalam algoritma, kemudian catat apakah lebih baik atau tidak.</li>
+			</ul>
 		</li>
 	</ol>
 </blockquote>
@@ -1862,7 +1865,7 @@ service nginx restart
 	<ol start="16">
 		<li>
 			<p align="justify">
-				Raja Númenor terakhir yang ambisius, Pharazon, mencoba mengawasi taman-taman Peri. Konfigurasikan Nginx di Pharazon sebagai reverse proxy. Buat upstream Kesatria_Lorien berisi alamat ketiga worker PHP. Atur agar permintaan ke pharazon.<xxxx>.com diteruskan ke backend, dan pastikan konfigurasi Nginx di Pharazon juga meneruskan informasi Basic Authentication yang dimasukkan pengguna ke worker.
+				Raja Númenor terakhir yang ambisius, Pharazon, mencoba mengawasi taman-taman Peri. Konfigurasikan Nginx di Pharazon sebagai reverse proxy. Buat upstream Kesatria_Lorien berisi alamat ketiga worker PHP. Atur agar permintaan ke pharazon.&lt;xxxx&gt;.com diteruskan ke backend, dan pastikan konfigurasi Nginx di Pharazon juga meneruskan informasi Basic Authentication yang dimasukkan pengguna ke worker.
 			</p>
 		</li>
 	</ol>
@@ -1956,13 +1959,75 @@ service nginx restart
 	<ol start="17">
 		<li>
 			<p align="justify">
-				Dari node client, lakukan benchmark ke pharazon.<xxxx>.com, jangan lupa menyertakan kredensial autentikasi. Amati distribusi beban ke para worker. Kemudian, simulasikan salah satu taman Peri runtuh (misal: service nginx stop di Galadriel) dan jalankan lagi benchmark. Apakah Pharazon masih bisa mengarahkan pengunjung ke taman yang tersisa? Periksa log Pharazon.
+				Dari node client, lakukan benchmark ke pharazon.&lt;xxxx&gt;.com, jangan lupa menyertakan kredensial autentikasi. Amati distribusi beban ke para worker. Kemudian, simulasikan salah satu taman Peri runtuh (misal: service nginx stop di Galadriel) dan jalankan lagi benchmark. Apakah Pharazon masih bisa mengarahkan pengunjung ke taman yang tersisa? Periksa log Pharazon.
 			</p>
 		</li>
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama untuk melalukan benchmark Pharazon adalah memantau error log yang ada pada Pharazon dan menjalankan tes benchmark untuk meilihat apakah ada error yang muncul. Di mana langkah implementasinya:
+</p>
 
+1. Memantau file `/var/log/nginx/error.log`.
+
+```bash
+tail -f /var/log/nginx/error.log
+```
+
+<p align="justify">
+Menggunakan Gilgalad untuk mengeksekusi benchmark:
+</p>
+
+2. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+3. Menginstall `apache2-utils`.
+
+```bash
+apt-get install apache2-utils -y
+```
+
+4. Menjalankan benchmark menggunakan ApacheBench (ab) dengan ketentuan `300` HTTP request dan `10` concurrency.
+
+```bash
+ab -n 300 -c 10 -A noldor:silvan http://pharazon.K36.com/
+```
+
+5. Pantau error log pada Pharazon.
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image25.png" alt="ab01" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya belum terdapat error yang muncul pada Pharazon. Hal ini dikarenakan ketiga PHP worker masih berjalan.
+</p>
+
+6. Mematikan salah satu PHP worker. Menggunakan Celeborn sebagai contoh.
+
+```bash
+service nginx stop
+```
+
+7. Menjalankan ulang benchmark menggunakan ApacheBench (ab) dengan ketentuan `300` HTTP request dan `10` concurrency.
+
+```bash
+ab -n 300 -c 10 -A noldor:silvan http://pharazon.K36.com/
+```
+
+8. Pantau ulang error log pada Pharazon.
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image26.png" alt="ab02" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya terdapat error yang muncul pada Pharazon. Hal ini dikarenakan Pharazon mencoba berkali-kali untuk meneruskan query ke node Celeborn, meskipun sebelumnya sudah diberhentikan. Pharazon tetap akan mencoba meneruskan query ke Celeborn karena Reverse Proxy di desain dengan tidak menerapkan maksimal jumlah error dan penggunaan metode <b>Round Robin</b> dalam pendistribusian load ke PHP Worker.
+</p>
 
 ### • Soal 18
 
@@ -1976,9 +2041,174 @@ service nginx restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama untuk dapat membuat Database Master dan Slave, di mana slave akan menyalin data dari master, maka kita perlu mengkonfigurasi terlebih dahulu Palantir dan Narvi. Di mana langkah implementasinya:
+</p>
+
+#### • Database Master
+
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `mariadb-server`.
+
+```bash
+apt-get install mariadb-server -y
+```
+
+3. Membuat file konfigurasi `/etc/mysql/mariadb.conf.d/50-server.cnf` dan menetapkan ID server dari Database Master.
+
+```bash
+cat > /etc/mysql/mariadb.conf.d/50-server.cnf <<'EOF'
+[mysqld]
+server-id=1
+log_bin=/var/log/mysql/mariadb-bin.log
+bind-address=0.0.0.0
+EOF
+```
+
+4. Membuat direktori `/var/log/mysql`.
+
+```bash
+mkdir -p /var/log/mysql
+```
+
+5. Mengalihkan kepemilikan direktori `/var/log/mysql` ke user `mysql`.
+
+```bash
+chown mysql:mysql /var/log/mysql
+```
+
+6. Melakukan restart pada service `mariadb`.
+
+```bash
+service mariadb restart
+```
+
+7. Menetapkan user untuk `Narvi`, dan memberikan hak akses untuk menyalin data.
+
+```bash
+mysql<<EOF
+CREATE USER 'replica'@'192.229.4.103' IDENTIFIED BY 'replicaPass';
+GRANT REPLICATION SLAVE ON *.* TO 'replica'@'192.229.4.103';
+FLUSH PRIVILEGES;
+
+SHOW MASTER STATUS;
+EOF
+``` 
+
+#### • Database Slave
+
+8. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+9. Menginstall `mariadb-server`.
+
+```bash
+apt-get install mariadb-server -y
+```
+
+10. Membuat file konfigurasi `/etc/mysql/mariadb.conf.d/50-server.cnf` dan menetapkan ID server dari Database Slave.
+
+```bash
+cat > /etc/mysql/mariadb.conf.d/50-server.cnf << 'EOF'
+[mysqld]
+server-id=2
+relay_log=/var/log/mysql/mariadb-relay-bin.log
+read_only=1
+EOF
+```
+
+11. Membuat direktori `/var/log/mysql`.
+
+```bash
+mkdir -p /var/log/mysql
+```
+
+12. Mengalihkan kepemilikan direktori `/var/log/mysql` ke user `mysql`.
+
+```bash
+chown mysql:mysql /var/log/mysql
+```
+
+13. Melakukan restart pada service `mariadb`.
+
+```bash
+service mariadb restart
+```
+
+14. Menetapkan node `Palantir` sebagai Database Master yang akan disalin datanya.
+
+```bash
+mysql<<EOF
+CHANGE MASTER TO
+    MASTER_HOST='192.229.4.102',
+    MASTER_USER='replica',
+    MASTER_PASSWORD='replicaPass',
+    MASTER_LOG_FILE='mariadb-bin.000001',
+    MASTER_LOG_POS=1422;
+
+START SLAVE;
+
+SHOW SLAVE STATUS\G;
+EOF
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya Database Slave dapat menyalin data yang dibuat dan tersimpan pada Database Master. Di mana langkah implementasinya:
+</p>
+
+#### • Database Master
+
+15. Membuat database dan tabel baru.
 
 
+```bash
+mysql<<EOF
+CREATE DATABASE K36DB;
+USE K36DB;
 
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    origin VARCHAR(100)
+);
+
+INSERT INTO users (name, origin) VALUES
+('Galadhrim', 'Lothlorien'),
+('Noldor', 'Valinor');
+
+SHOW TABLES;
+SELECT * FROM users;
+EOF
+```
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image23.png" alt="dbms" width="80%" height="80%">  
+</p>
+
+#### • Database Slave
+
+16. Memastikan bahwasannya database dan tabel yang dibuat telah berhasil disalin.
+
+```bash
+mysql<<EOF
+SHOW DATABASES;
+USE K36DB;
+SHOW TABLES;
+SELECT * FROM users;
+EOF
+```
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image24.png" alt="dbsl	" width="80%" height="80%">  
+</p>
 
 ### • Soal 19
 
