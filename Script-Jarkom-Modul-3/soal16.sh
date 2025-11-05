@@ -3,21 +3,22 @@
 apt-get update
 apt-get install nginx -y
 
-cat > /etc/nginx/conf.d/upstream.conf << 'EOF'
+cat > /etc/nginx/conf.d/upstream.conf <<'EOF'
 upstream Kesatria_Lorien {
     server galadriel.K36.com:8004;
     server celeborn.K36.com:8005;
     server oropher.K36.com:8006;
     keepalive 16;
-    resolver 192.229.5.101 valid=300s;
 }
 EOF
 
-cat > /etc/nginx/sites-available/pharazon << 'EOF'
+cat > /etc/nginx/sites-available/pharazon <<'EOF'
 server {
     listen 80;
     server_name pharazon.K36.com;
 
+    resolver 192.229.5.101 valid=300s;
+    
     location / {
         proxy_pass http://Kesatria_Lorien;
         proxy_http_version 1.1;
@@ -32,6 +33,7 @@ server {
         proxy_set_header Authorization $http_authorization;
     }
 }
+EOF
 
 ln -s /etc/nginx/sites-available/pharazon /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
