@@ -94,6 +94,270 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Langkah pertama adalah menyusun topologi jaringannya terlebih dahulu dan menghubungkan link antar node sesuai ketentuan soal.
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image01.png" alt="topo" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Setelah itu, untuk memastikan bahwa setiap node dapat berkomunikasi dengan internet, maka kita dapat beralih ke menu <code>Configure > Edit Network Configuration</code> untuk setiap node yang ada.
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image02.png" alt="konf" width="80%" height="80%">  
+</p>
+
+Di mana ketentuan untuk setiap nodenya:
+
+1. **Durin**
+
+```bash
+auto eth0
+iface eth0 inet dhcp
+
+auto eth1
+iface eth1 inet static
+    address 192.229.1.1
+    netmask 255.255.255.0
+
+auto eth2
+iface eth2 inet static
+    address 192.229.2.1
+    netmask 255.255.255.0
+
+auto eth3
+iface eth3 inet static
+    address 192.229.3.1
+    netmask 255.255.255.0
+
+auto eth4
+iface eth4 inet static
+    address 192.229.4.1
+    netmask 255.255.255.0
+
+auto eth5
+iface eth5 inet static
+    address 192.229.5.1
+    netmask 255.255.255.0
+
+up sh -c 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE'
+```
+
+2. **Elendil**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.101
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+3. **Isildur**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.102
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+4. **Anarion**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.103
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+5. **Miriel**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.104
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+6. **Elros**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.1.105
+	netmask 255.255.255.0
+	gateway 192.229.1.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+7. **Amandil**
+
+```bash
+auto eth0
+iface eth0 inet dhcp
+```
+
+8. **Galadriel**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.101
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+9. **Celeborn**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.102
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+10. **Oropher**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.103
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+11. **Celebrimbor**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.104
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+12. **Pharazon**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.2.105
+	netmask 255.255.255.0
+	gateway 192.229.2.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+13. **Gilgalad**
+
+```bash
+auto eth0
+iface eth0 inet dhcp
+```
+
+14. **Khamul**
+
+```bash
+auto eth0
+iface eth0 inet dhcp
+```
+
+15. **Erendis**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.101
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+16. **Amdir**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.3.102
+	netmask 255.255.255.0
+	gateway 192.229.3.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+17. **Aldarion**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.4.101
+	netmask 255.255.255.0
+	gateway 192.229.4.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+18. **Palantir**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.4.102
+	netmask 255.255.255.0
+	gateway 192.229.4.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+19. **Narvi**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.4.103
+	netmask 255.255.255.0
+	gateway 192.229.4.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
+
+20. **Minastir**
+
+```bash
+auto eth0
+iface eth0 inet static
+	address 192.229.5.101
+	netmask 255.255.255.0
+	gateway 192.229.5.1
+
+up sh -c 'echo "nameserver 192.168.122.1" > /etc/resolv.conf'
+```
 
 ### • Soal 2
 
@@ -101,16 +365,158 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
 	<ol start="2">
 		<li>
 			<p align="justify">
-				Raja Pelaut Aldarion, penguasa wilayah Númenor, memutuskan cara pembagian tanah client secara dinamis. Ia menetapkan:<br>
-- Client Dinamis Keluarga Manusia: Mendapatkan tanah di rentang [prefix ip].1.6 - [prefix ip].1.34 dan [prefix ip].1.68 - [prefix ip].1.94.<br>
-- Client Dinamis Keluarga Peri: Mendapatkan tanah di rentang [prefix ip].2.35 - [prefix ip].2.67 dan [prefix ip].2.96 - [prefix ip].2.121.<br>
-- Khamul yang misterius: Diberikan tanah tetap di [prefix ip].3.95, agar keberadaannya selalu diketahui. Pastikan Durin dapat menyampaikan dekrit ini ke semua wilayah yang terhubung dengannya.<br>
+				Raja Pelaut Aldarion, penguasa wilayah Númenor, memutuskan cara pembagian tanah client secara dinamis. Ia menetapkan:
 			</p>
+			<ul>
+				<li>Client Dinamis Keluarga Manusia: Mendapatkan tanah di rentang [prefix ip].1.6 - [prefix ip].1.34 dan [prefix ip].1.68 - [prefix ip].1.94.</li>
+				<li>Client Dinamis Keluarga Peri: Mendapatkan tanah di rentang [prefix ip].2.35 - [prefix ip].2.67 dan [prefix ip].2.96 - [prefix ip].2.121.</li>
+				<li>Khamul yang misterius: Diberikan tanah tetap di [prefix ip].3.95, agar keberadaannya selalu diketahui. Pastikan Durin dapat menyampaikan dekrit ini ke semua wilayah yang terhubung dengannya.</li>
 		</li>
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk menetapkan range pool IP untuk client dinamis, maka kita perlu mengkonfigurasi terlebih dahulu <b>DHCP Server (Aldarion)</b> dan <b>DHCP Relay (Durin)</b>. Di mana langkah implementasinya:
+</p>
 
+#### • DHCP Server
+
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `isc-dhcp-server`.
+
+```bash
+apt-get install isc-dhcp-server -y
+```
+
+3. Membuat file konfigurasi `/etc/default/isc-dhcp-server` dan menetapkan interface yang digunakan DHCP Server untuk mendengar request DHCP.
+
+```bash
+cat > /etc/default/isc-dhcp-server << 'EOF'
+INTERFACESv4="eth0"
+EOF
+```
+
+4. Membuat file konfigurasi `/etc/dhcp/dhcpd.conf` dan menetapkan interface range pool IP yang disediakan oleh server dengan mengikuti ketentuan soal.
+
+```bash
+cat > /etc/dhcp/dhcpd.conf << 'EOF'
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+
+subnet 192.229.1.0 netmask 255.255.255.0 {
+    option routers 192.229.1.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.1.255;
+    option domain-name-servers 192.168.122.1;
+    range 192.229.1.6 192.229.1.34;
+    range 192.229.1.68 192.229.1.94;
+}
+
+subnet 192.229.2.0 netmask 255.255.255.0 {
+    option routers 192.229.2.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.2.255;
+    option domain-name-servers 192.168.122.1;
+    range 192.229.2.35 192.229.2.67;
+    range 192.229.2.96 192.229.2.121;
+}
+
+subnet 192.229.3.0 netmask 255.255.255.0 {
+    option routers 192.229.3.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.3.255;
+    option domain-name-servers 192.168.122.1;
+}
+
+host Khamul {
+    hardware ethernet 02:42:4c:b6:e5:00;
+    fixed-address 192.229.3.95;
+}
+
+subnet 192.229.4.0 netmask 255.255.255.0 {
+    option routers 192.229.4.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.4.255;
+    option domain-name-servers 192.168.122.1;
+}
+EOF
+```
+
+5. Melakukan restart pada service `isc-dhcp-server`.
+
+```bash
+service isc-dhcp-server restart
+```
+
+#### • DHCP Relay
+
+6. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+7. Menginstall `isc-dhcp-relay`.
+
+```bash
+apt-get install isc-dhcp-relay -y
+```
+
+8. Membuat file konfigurasi `/etc/default/isc-dhcp-relay` dan menetapkan alamat dari DHCP Server dan interface yang digunakan DHCP Relay untuk meneruskan request DHCP.
+
+```bash
+cat > /etc/default/isc-dhcp-relay << 'EOF'
+SERVERS="192.229.4.101"
+INTERFACES="eth1 eth2 eth3 eth4 eth5"
+OPTIONS=""
+EOF
+```
+
+9. Membuat file konfigurasi `/etc/sysctl.conf` dan menetapkan fungsi IP forwarding pada sistem.
+
+```bash
+cat > /etc/sysctl.conf << 'EOF'
+net.ipv4.ip_forward=1
+EOF
+```
+
+10. Memuat ulang konfigurasi sistem.
+
+```bash
+sysctl -p
+```
+
+11. Melakukan restart pada service `isc-dhcp-relay`.
+
+```bash
+service isc-dhcp-relay restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memverifikasi bahwasannya client dinamis dapat menerima offer IP address dari DHCP Server dan menggunakan IP address tersebut.
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image03.png" alt="ipca" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image04.png" alt="ipcb" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image05.png" alt="ipcc" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya client dinamis, yaitu Amandil, Gilgalad, dan Khamul berhasil mendapatkan IP address sesuai ketentuan range pool pada soal.
+</p>
 
 ### • Soal 3
 
@@ -124,13 +530,131 @@ Rasulullah Shallallāhu ‘alaihi wa Sallam pernah bersabda:
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk mengarahkan query dari node lain (kecuali Durin) ke Minastir, maka kita perlu mengkonfigurasi terlebih dahulu Minastir sebagai <b>DNS Forwarder</b>. Di mana langkah implementasinya:
+</p>
+
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `dnsmasq`.
+
+```bash
+apt-get install dnsmasq -y
+```
+
+3. Membuat file konfigurasi `/etc/dnsmasq.conf` dan menetapkan Minastir sebagai DNS Forwarder, yang meliputi interface yang digunakan untuk mendengarkan query dari node lain (kecuali Durin) dan logging query yang melewati DNS Forwarder.
+
+```bash
+cat > /etc/dnsmasq.conf << 'EOF'
+no-resolv
+no-poll
+
+interface=eth0
+bind-interfaces
+server=192.168.122.1
+log-queries
+log-facility=/var/log/dnsmasq.log
+neg-ttl=60
+cache-size=500
+EOF
+```
+
+4. Memuat ulang konfigurasi sistem.
+
+```bash
+sysctl -p
+```
+
+5. Melakukan restart pada service `dnsmasq`.
+
+```bash
+service dnsmasq restart
+```
+
+<p align="justify">
+&emsp; Selain itu, kita perlu mengubah konfigurasi nameserver yang ditetapkan pada DHCP Server. Di mana langkah implementasinya:
+</p>
+
+6. Memperbarui file konfigurasi `/etc/dhcp/dhcpd.conf` dan menetapkan IP address dari DNS Forwarder sebagai nameserver.
+
+```bash
+cat > /etc/dhcp/dhcpd.conf << 'EOF'
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+
+subnet 192.229.1.0 netmask 255.255.255.0 {
+    option routers 192.229.1.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.1.255;
+    option domain-name-servers 192.229.5.101;
+    range 192.229.1.6 192.229.1.34;
+    range 192.229.1.68 192.229.1.94;
+}
+
+subnet 192.229.2.0 netmask 255.255.255.0 {
+    option routers 192.229.2.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.2.255;
+    option domain-name-servers 192.229.5.101;
+    range 192.229.2.35 192.229.2.67;
+    range 192.229.2.96 192.229.2.121;
+}
+
+subnet 192.229.3.0 netmask 255.255.255.0 {
+    option routers 192.229.3.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.3.255;
+    option domain-name-servers 192.229.5.101;
+}
+
+host Khamul {
+    hardware ethernet 02:42:4c:b6:e5:00;
+    fixed-address 192.229.3.95;
+}
+
+subnet 192.229.4.0 netmask 255.255.255.0 {
+    option routers 192.229.4.1;
+    option subnet-mask 255.255.255.0;
+    option broadcast-address 192.229.4.255;
+    option domain-name-servers 192.229.5.101;
+}
+EOF
+```
+
+7. Melakukan restart pada service `isc-dhcp-server`.
+
+```bash
+service isc-dhcp-server restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memverifikasi bahwasannya semua query yang berasal dari node lain (kecuali Durin) melewati DNS Forwarder terlebih dahulu. Di mana kita dapat menggunakan command <code>nslookup</code>, dengan menggunakan <b>Aldarion</b> sebagai contoh:
+</p>
+
+```bash
+nslookup google.com
+```
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image06.png" alt="dnsf" width="80%" height="80%">  
+</p>
+
+<p align="justify">
+&emsp; Berdasarkan screenshot di atas, dapat disimpulkan bahwasannya query dari Aldarion diarahkan terlebih dahulu ke DNS Forwarder, dibuktikan dengan IP address asal dari <code>nslookup</code> yang bukan menunjukkan IP dari Aldarion, melainkan IP dari DNS Forwarder (Minastir).
+</p>
+
 ### • Soal 4
 
 <blockquote>
 	<ol start="4">
 		<li>
 			<p align="justify">
-				Ratu Erendis, sang pembuat peta, menetapkan nama resmi untuk wilayah utama (<xxxx>.com). Ia menunjuk dirinya (ns1.<xxxx>.com) dan muridnya Amdir (ns2.<xxxx>.com) sebagai penjaga peta resmi. Setiap lokasi penting (Palantir, Elros, Pharazon, Elendil, Isildur, Anarion, Galadriel, Celeborn, Oropher) diberikan nama domain unik yang menunjuk ke lokasi fisik tanah mereka. Pastikan Amdir selalu menyalin peta (master-slave) dari Erendis dengan setia.
+				Ratu Erendis, sang pembuat peta, menetapkan nama resmi untuk wilayah utama (&lt;xxxx&gt;.com). Ia menunjuk dirinya (ns1.&lt;xxxx&gt;.com) dan muridnya Amdir (ns2.&lt;xxxx&gt;.com) sebagai penjaga peta resmi. Setiap lokasi penting (Palantir, Elros, Pharazon, Elendil, Isildur, Anarion, Galadriel, Celeborn, Oropher) diberikan nama domain unik yang menunjuk ke lokasi fisik tanah mereka. Pastikan Amdir selalu menyalin peta (master-slave) dari Erendis dengan setia.
 			</p>
 		</li>
 	</ol>
