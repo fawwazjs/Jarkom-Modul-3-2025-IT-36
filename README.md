@@ -1306,8 +1306,6 @@ service isc-dhcp-server restart
 	</ol>
 </blockquote>
 
-
-
 ### • Soal 12
 
 <blockquote>
@@ -1320,6 +1318,169 @@ service isc-dhcp-server restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk dapat menampilkan hostname saat mengakses web, maka kita perlu mengkonfigurasi terlebih dahulu Galadriel, Celeborn, dan Oropher sebagai <b>PHP Worker</b>. Di mana langkah implementasinya:
+</p>
+
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `nginx` dan `php-fpm`.
+
+```bash
+apt-get install nginx php-fpm -y
+```
+
+3. Membuat direktori `/var/www/html`.
+
+```bash
+mkdir -p /var/www/html/
+```
+
+4. Membuat file `index.php` pada `/var/www/html` dan mengkonfigurasikannya untuk menampilkan hostname.
+
+
+```bash
+echo "<?php echo gethostname(); ?>" > /var/www/html/index.php
+```
+
+5. Membuat file konfigurasi `/etc/nginx/sites-available/[PHP Worker]` dan menetapkan akses web menggunakan nama domain.
+
+#### a. Galadriel
+
+```bash
+cat > /etc/nginx/sites-available/galadriel <<'EOF'
+server {
+    listen 80;
+    server_name galadriel.K36.com;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### b. Celeborn
+
+```bash
+cat > /etc/nginx/sites-available/celeborn <<'EOF'
+server {
+    listen 80;
+    server_name celeborn.K36.com;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### c. Oropher
+
+```bash
+cat > /etc/nginx/sites-available/oropher <<'EOF'
+server {
+    listen 80;
+    server_name oropher.K36.com;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+6. Membuat file konfigurasi `/etc/nginx/sites-available/reject` dan menetapkan `Error 404` untuk akses web selain menggunakan nama domain.
+
+```bash
+cat > /etc/nginx/sites-available/reject <<'EOF'
+server {
+    listen 80 default_server;
+    server_name _;
+
+    return 404;
+}
+EOF
+```
+
+7. Membuat link simbolik `/etc/nginx/sites-enabled/` yang merujuk ke `/etc/nginx/sites-available/[PHP Worker]`.
+
+#### a. Galadriel
+
+```bash
+ln -s /etc/nginx/sites-available/galadriel /etc/nginx/sites-enabled/
+```
+
+#### b. Celeborn
+
+```bash
+ln -s /etc/nginx/sites-available/celeborn /etc/nginx/sites-enabled/
+```
+
+#### c. Oropher
+
+```bash
+ln -s /etc/nginx/sites-available/oropher /etc/nginx/sites-enabled/
+```
+
+8. Membuat link simbolik `/etc/nginx/sites-enabled/` yang merujuk ke `/etc/nginx/sites-available/reject`.
+
+```bash
+ln -s /etc/nginx/sites-available/reject /etc/nginx/sites-enabled/
+```
+
+9. Menghapus konfigurasi default dari `nginx`.
+
+```bash
+rm /etc/nginx/sites-enabled/default
+```
+
+10. Melakukan restart pada service `nginx` dan `php8.4-fpm`.
+
+```bash
+service php8.4-fpm restart
+service nginx restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya akses web ke dari masing-masing PHP Worker sudah mengikuti ketentuan soal, di mana akses hanya bisa melalui nama domain dan tidak melalui IP address dari masing-masing PHP worker. Di mana hal ini dapat dilakukan dengan menggunakan command <code>curl</code>. Menggunakan Gilgalad sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image13.png" alt="posi" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image14.png" alt="nega" width="80%" height="80%">  
+</p>
 
 ### • Soal 13
 
@@ -1333,6 +1494,103 @@ service isc-dhcp-server restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk dapat mengatur port yang digunakan oleh PHP worker saat ingin mengakses web, maka kita perlu memperbarui konfigurasi PHP yang ada pada Galadriel, Celeborn, dan Oropher. Di mana langkah implementasinya:
+</p>
+
+1. Memperbarui file konfigurasi `/etc/nginx/sites-available/[PHP Worker]` dan memperbarui port yang digunakan PHP worker untuk mendengar.
+
+#### a. Galadriel
+
+```bash
+cat > /etc/nginx/sites-available/galadriel <<'EOF'
+server {
+    listen 8004;
+    server_name galadriel.K36.com;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### b. Celeborn
+
+```bash
+cat > /etc/nginx/sites-available/celeborn <<'EOF'
+server {
+    listen 8005;
+    server_name celeborn.K36.com;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### c. Oropher
+
+```bash
+cat > /etc/nginx/sites-available/oropher <<'EOF'
+server {
+    listen 8006;
+    server_name oropher.K36.com;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+2. Melakukan restart pada service `nginx` dan `php8.4-fpm`.
+
+```bash
+service php8.4-fpm restart
+service nginx restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya akses web ke dari masing-masing PHP Worker hanya bisa diakses melalui port yang telah ditetapkan pada ketentuan soal. Di mana hal ini dapat dilakukan dengan menggunakan command <code>curl</code>. Menggunakan Gilgalad sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image15.png" alt="8004" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image16.png" alt="8005" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image17.png" alt="8006" width="80%" height="80%">  
+</p>
 
 ### • Soal 14
 
@@ -1346,7 +1604,130 @@ service isc-dhcp-server restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk dapat menerapkan Basic HTTP Authentication saat ingin mengakses web, maka kita perlu menyimpan <code>username:password</code> yang ingin digunakan dan memperbarui konfigurasi PHP yang ada pada Galadriel, Celeborn, dan Oropher. Di mana langkah implementasinya:
+</p>
 
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `apache2-utils`.
+
+```bash
+apt-get install apache2-utils -y
+```
+
+3. Menyimpan `username:password` yang ingin digunakan sesuai dengan ketentuan soal pada file `/etc/nginx/.htpasswd`.
+
+```bash
+htpasswd -cb /etc/nginx/.htpasswd noldor silvan
+```
+
+4. Memperbarui file konfigurasi `/etc/nginx/sites-available/[PHP Worker]` dan menambahkan klausa untuk menerapkan Basic HTTP Authentication saat mengakses web.
+
+#### a. Galadriel
+
+```bash
+cat > /etc/nginx/sites-available/galadriel <<'EOF'
+server {
+    listen 8004;
+    server_name galadriel.K36.com;
+
+    auth_basic on;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### b. Celeborn
+
+```bash
+cat > /etc/nginx/sites-available/celeborn <<'EOF'
+server {
+    listen 8005;
+    server_name celeborn.K36.com;
+
+    auth_basic on;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### c. Oropher
+
+```bash
+cat > /etc/nginx/sites-available/oropher <<'EOF'
+server {
+    listen 8006;
+    server_name oropher.K36.com;
+
+    auth_basic on;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+5. Melakukan restart pada service `nginx` dan `php8.4-fpm`.
+
+```bash
+service php8.4-fpm restart
+service nginx restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya akses web ke dari masing-masing PHP Worker hanya bisa diakses melalui port dan <code>username:password</code> yang telah ditetapkan pada ketentuan soal. Di mana hal ini dapat dilakukan dengan menggunakan command <code>curl</code>. Menggunakan Gilgalad sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image18.png" alt="8004" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image19.png" alt="8005" width="80%" height="80%">  
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image20.png" alt="8006" width="80%" height="80%">  
+</p>
 
 ### • Soal 15
 
