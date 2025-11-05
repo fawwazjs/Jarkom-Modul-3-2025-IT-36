@@ -1741,7 +1741,120 @@ service nginx restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk dapat menampilkan IP address asli dari pengunjung yang mengakses web, maka kita perlu memperbarui file <code>index.php</code> dan memperbarui konfigurasi PHP yang ada pada Galadriel, Celeborn, dan Oropher. Di mana langkah implementasinya:
+</p>
 
+1. Memperbarui file konfigurasi `/etc/nginx/sites-available/[PHP Worker]` dan menambahkan klausa untuk menerapkan X-Real-IP saat mengakses web.
+
+#### a. Galadriel
+
+```bash
+cat > /etc/nginx/sites-available/galadriel <<'EOF'
+server {
+    listen 8004;
+    server_name galadriel.K36.com;
+
+    auth_basic on;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        fastcgi_param X-Real-IP $remote_addr;
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### b. Celeborn
+
+```bash
+cat > /etc/nginx/sites-available/celeborn <<'EOF'
+server {
+    listen 8005;
+    server_name celeborn.K36.com;
+
+    auth_basic on;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        fastcgi_param X-Real-IP $remote_addr;
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+#### c. Oropher
+
+```bash
+cat > /etc/nginx/sites-available/oropher <<'EOF'
+server {
+    listen 8006;
+    server_name oropher.K36.com;
+
+    auth_basic on;
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    root /var/www/html;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        fastcgi_param X-Real-IP $remote_addr;
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+}
+EOF
+```
+
+2. Memperbarui isi dari file `index.php` untuk menampilkan IP address asli dari pengunjung yang mengakses web.
+
+```bash
+cat > /var/www/html/index.php <<'EOF'
+<?php
+$hostname = gethostname();
+$client_ip = $_SERVER['REMOTE_ADDR'] ?? '???';
+echo "Hostname: $hostname\n";
+echo "Client IP: $client_ip\n";
+?>
+EOF
+```
+
+3. Melakukan restart pada service `nginx` dan `php8.4-fpm`.
+
+```bash
+service php8.4-fpm restart
+service nginx restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya akses web ke dari masing-masing PHP Worker hanya bisa diakses melalui port dan <code>username:password</code> yang telah ditetapkan pada ketentuan soal, serta menampilkan IP address dari pengunjung yang mengakses web. Di mana hal ini dapat dilakukan dengan menggunakan command <code>curl</code>. Menggunakan Gilgalad sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image21.png" alt="xrip" width="80%" height="80%">  
+</p>
 
 ### • Soal 16
 
@@ -1755,7 +1868,87 @@ service nginx restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; Untuk mengatur query yang datang ke Pharazon untuk diteruskan ke PHP Worker, maka kita perlu mengkonfigurasi terlebih dahulu Pharazon sebagai <b>Reverse Proxy</b>, sekaligus sebagai <b>Load Balancer</b>. Di mana langkah implementasinya:
+</p>
 
+1. Memperbarui daftar package yang ada pada apt-get.
+
+```bash
+apt-get update
+```
+
+2. Menginstall `nginx`.
+
+```bash
+apt-get install nginx -y
+```
+
+3. Membuat file konfigurasi `/etc/nginx/conf.d/upstream.conf` dan menetapkan nama domain dari PHP Worker sebagai server.
+
+```bash
+cat > /etc/nginx/conf.d/upstream.conf <<'EOF'
+upstream Kesatria_Lorien {
+    server galadriel.K36.com:8004;
+    server celeborn.K36.com:8005;
+    server oropher.K36.com:8006;
+    keepalive 16;
+}
+EOF
+```
+
+4. Membuat file konfigurasi `/etc/nginx/sites-available/pharazon` dan menetapkan Pharazon sebagai Reverse Proxy dan Load Balancer.
+
+```bash
+cat > /etc/nginx/sites-available/pharazon <<'EOF'
+server {
+    listen 80;
+    server_name pharazon.K36.com;
+
+    resolver 192.229.5.101 valid=300s;
+    
+    location / {
+        proxy_pass http://Kesatria_Lorien;
+        proxy_http_version 1.1;
+        
+        proxy_set_header Host $host;
+        
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Authorization $http_authorization;
+    }
+}
+EOF
+```
+
+5. Membuat link simbolik `/etc/nginx/sites-enabled/` yang merujuk ke `/etc/nginx/sites-available/pharazon`.
+
+```bash
+ln -s /etc/nginx/sites-available/pharazon /etc/nginx/sites-enabled/
+```
+
+6. Menghapus konfigurasi default dari `nginx`.
+
+```bash
+rm -f /etc/nginx/sites-enabled/default
+```
+
+7. Melakukan restart pada service `nginx`.
+
+```bash
+service nginx restart
+```
+
+<p align="justify">
+&emsp; Terakhir, kita perlu memastikan bahwasannya Pharazon dapat mengarahkan query yang datang kepada para PHP Worker. Di mana hal ini dapat dilakukan dengan menggunakan command <code>curl</code>. Menggunakan Gilgalad sebagai contoh:
+</p>
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/image22.png" alt="prox" width="80%" height="80%">  
+</p>
 
 ### • Soal 17
 
