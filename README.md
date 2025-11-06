@@ -1297,7 +1297,7 @@ ln -s /etc/nginx/sites-available/laravel /etc/nginx/sites-enabled/
 nginx -t
 service nginx restart
 ```
-5. Menguji akses Laravel dari node client.
+5. Menguji akses Laravel dari node client (misal Miriel).
 ```bash
 apt install lynx -y
 lynx http://192.229.1.101
@@ -1325,6 +1325,187 @@ lynx http://192.229.1.101
 	</ol>
 </blockquote>
 
+1. Menginstal dan menyalakan layanan MariaDB di node Palantir.
+```bash
+apt install -y mariadb-server
+service mariadb start
+```
+2. Membuat database dan user untuk Laravel.
+```bash
+mysql -e "CREATE DATABASE laravel_db;"
+mysql -e "CREATE USER 'laravel_user'@'%' IDENTIFIED BY 'laravelpass';"
+mysql -e "GRANT ALL PRIVILEGES ON laravel_db.* TO 'laravel_user'@'%';"
+mysql -e "FLUSH PRIVILEGES;"
+```
+3. Mengizinkan koneksi dari luar dengan memodifikasi konfigurasi MariaDB.
+```bash
+sed -i 's/127.0.0.1/0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
+service mariadb restart
+```
+4. Mengonfigurasi file .env di setiap worker Laravel.
+```bash
+cd /var/www/laravel
+nano .env
+```
+Elendil
+```bash
+DB_CONNECTION=mysql
+DB_HOST=192.229.4.101
+DB_PORT=3306
+DB_DATABASE=laravel_db
+DB_USERNAME=laravel_user
+DB_PASSWORD=laravelpass
+```
+Isildur
+```bash
+DB_CONNECTION=mysql
+DB_HOST=192.229.4.102
+DB_PORT=3306
+DB_DATABASE=laravel_db
+DB_USERNAME=laravel_user
+DB_PASSWORD=laravelpass
+```
+Anarion
+```bash
+DB_CONNECTION=mysql
+DB_HOST=192.229.4.103
+DB_PORT=3306
+DB_DATABASE=laravel_db
+DB_USERNAME=laravel_user
+DB_PASSWORD=laravelpass
+```
+
+5. Mengubah listen port di masing node (Elendil, Isildur, Anarion) (/etc/nginx/sites-available/laravel)
+Elendil
+```bash
+server {
+    listen 8001;
+    server_name elendil.k36.com;
+    root /var/www/laravel/public;
+
+    index index.php index.html;
+
+    access_log /var/log/nginx/elendil_access.log;
+    error_log /var/log/nginx/elendil_error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+Isildur
+```bash
+server {
+    listen 8002;
+    server_name isildur.k36.com;
+    root /var/www/laravel/public;
+
+    index index.php index.html;
+
+    access_log /var/log/nginx/isildur_access.log;
+    error_log /var/log/nginx/isildur_error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+Anarion
+```bash
+server {
+    listen 8003;
+    server_name anarion.k36.com;
+    root /var/www/laravel/public;
+
+    index index.php index.html;
+
+    access_log /var/log/nginx/anarion_access.log;
+    error_log /var/log/nginx/anarion_error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+6. Menjalankan migrasi database.
+Masing2 node (Elendil, Isildur, Anarion)
+```bash
+ln -sf /etc/nginx/sites-available/laravel /etc/nginx/sites-enabled/Laravel
+nginx -t && service nginx restart
+```
+
+```bash
+cd /var/www/laravel
+php artisan migrate --seed
+```
+
+Koneksi dari Client (contoh Miriel)
+```bash
+cd /var/www/laravel
+php artisan migrate --seed
+```
+
+tambahin di `nano /etc/hosts`
+```bash
+192.229.1.101 elendil.k36.com
+192.229.1.102 isildur.k36.com
+192.229.1.103 anarion.k36.com
+```
+
+Lalu tes di client satu2
+```bash
+lynx http://elendil.k36.com:8001
+lynx http://isildur.k36.com:8002
+lynx http://anarion.k36.com:8003
+```
+
+Saat mencoba `lynx http://192.229.1.101:8001` bakal 403 forbidden
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1056).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1057).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1058).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1059).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1060).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1061).png" alt="leas" width="80%" height="80%">  
+</p>
 
 ### • Soal 9
 
