@@ -1543,6 +1543,11 @@ curl http://elendil.k36.com:8001/api/airing
 	</ol>
 </blockquote>
 
+masing2 Elendil, Ilsidur, Anarion (nambahin Elros.k36.com)<br>
+```bash
+nano /etc/nginx/sites-available/Laravel
+```
+
 
 ### • Soal 11
 
