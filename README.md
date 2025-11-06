@@ -1518,6 +1518,18 @@ Saat mencoba `lynx http://192.229.1.101:8001` bakal 403 forbidden
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; 	Pada soal ini, kita akan melakukannya di node client
+</p>
+
+Miriel
+```bash
+curl http://elendil.k36.com:8001/api/airing
+```
+<p align="justify">
+&emsp; 	Maka akan mnghasilkan `data: [] , messages: `successed``
+</p>
+
 
 ### • Soal 10
 
