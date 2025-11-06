@@ -1253,6 +1253,65 @@ service isc-dhcp-server restart
 	</ol>
 </blockquote>
 
+<p align="justify">
+&emsp; 	Pada soal ini, kita diminta untuk membuat benteng laravel untuk node Elendil, Isildur, dan Anarion.
+</p>
+
+1. Memperbarui daftar package dan menginstal dependensi yang diperlukan.<br>
+di masing node (Elendil, Isildur, Anarion):<br>
+```bash
+apt-get update
+apt-get install -y php8.4 php8.4-fpm php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip unzip git nginx composer
+```
+2. Mengkloning proyek Laravel ke dalam direktori `/var/www/laravel`.
+```bash
+git clone https://github.com/elshiraphine/laravel-simple-rest-api /var/www/laravel
+cd /var/www/laravel
+composer install
+```
+3. Membuat konfigurasi Nginx untuk Laravel pada file `/etc/nginx/sites-available/laravel`.
+```bash
+cat > /etc/nginx/sites-available/laravel << 'EOF'
+server {
+    listen 80;
+    server_name elendil.numenor.k36.com;
+    root /var/www/laravel/public;
+
+    index index.php index.html;
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
+    }
+
+    error_log /var/log/nginx/error.log;
+}
+EOF
+```
+4. Mengaktifkan konfigurasi dan me-restart Nginx.
+```bash
+ln -s /etc/nginx/sites-available/laravel /etc/nginx/sites-enabled/
+nginx -t
+service nginx restart
+```
+5. Menguji akses Laravel dari node client.
+```bash
+apt install lynx -y
+lynx http://192.229.1.101
+```
+
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1052).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1051).png" alt="leas" width="80%" height="80%">  
+</p>
+<p align="center">
+	<img src="Image-Jarkom-Modul-3/Screenshot (1050).png" alt="leas" width="80%" height="80%">  
+</p>
 
 ### • Soal 8
 
